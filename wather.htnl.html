@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Weather App</title>
+
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background: #eef2f3;
+      margin: 0;
+      padding: 30px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+
+    h1 {
+      color: #333;
+    }
+
+    #weather-box {
+      margin-top: 20px;
+      padding: 20px;
+      background: #fff;
+      width: 320px;
+      border-radius: 10px;
+      box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+      text-align: center;
+    }
+
+    #icon {
+      width: 80px;
+    }
+
+    input {
+      padding: 10px;
+      border-radius: 6px;
+      border: 1px solid #aaa;
+      width: 250px;
+    }
+
+    button {
+      padding: 10px 16px;
+      border: none;
+      background: #007bff;
+      color: white;
+      margin-left: 10px;
+      border-radius: 6px;
+      cursor: pointer;
+    }
+
+    button:hover {
+      background: #0056c7;
+    }
+
+    .small-btn {
+      margin-top: 10px;
+      background: #28a745;
+    }
+  </style>
+</head>
+<body>
+
+  <h1>Weather App</h1>
+
+  <div>
+    <input type="text" id="city-input" placeholder="Enter city name..." />
+    <button onclick="searchByCity()">Search</button>
+  </div>
+
+  <button class="small-btn" onclick="getLocationWeather()">Use My Location</button>
+
+  <div id="weather-box" style="display:none;">
+    <h2 id="city-name"></h2>
+    <img id="icon" src="" alt="Weather Icon" />
+    <h3 id="temp"></h3>
+    <p id="condition"></p>
+    <p id="extra"></p>
+  </div>
+
+  <script>
+    const API_KEY = "YOUR_API_KEY_HERE";
+
+    // Fetch by city name
+    function searchByCity() {
+      const city = document.getElementById("city-input").value;
+      if (!city) return alert("Please enter a city name.");
+      fetchWeather(`https://api.openweathermap.org/data/2.5/weather?q=${city}&appid=${API_KEY}&units=metric`);
+    }
+
+    // Fetch by geolocation
+    function getLocationWeather() {
+      if (!navigator.geolocation) {
+        alert("Geolocation not supported by your browser.");
+        return;
+      }
+
+      navigator.geolocation.getCurrentPosition(success, error);
+
+      function success(position) {
+        const { latitude, longitude } = position.coords;
+
+        fetchWeather(
+          `https://api.openweathermap.org/data/2.5/weather?lat=${latitude}&lon=${longitude}&appid=${API_KEY}&units=metric`
+        );
+      }
+
+      function error() {
+        alert("Unable to retrieve your location.");
+      }
+    }
+
+    // Fetch weather data
+    function fetchWeather(url) {
+      fetch(url)
+        .then(res => res.json())
+        .then(data => {
+          if (data.cod !== 200) {
+            alert(data.message);
+            return;
+          }
+          displayWeather(data);
+        })
+        .catch(() => alert("Error fetching weather data."));
+    }
+
+    // Display weather on the page
+    function displayWeather(data) {
+      document.getElementById("weather-box").style.display = "block";
+
+      document.getElementById("city-name").textContent = data.name;
+      document.getElementById("temp").textContent = `${data.main.temp}°C`;
+      document.getElementById("condition").textContent = data.weather[0].description;
+
+      document.getElementById("extra").innerHTML = `
+        Humidity: ${data.main.humidity}% <br>
+        Wind: ${data.wind.speed} m/s
+      `;
+
+      const iconCode = data.weather[0].icon;
+      document.getElementById("icon").src =
+        `https://openweathermap.org/img/wn/${iconCode}@2x.png`;
+    }
+  </script>
+
+</body>
+</html>
